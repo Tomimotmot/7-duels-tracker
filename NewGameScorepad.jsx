@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from './supabaseClient';
 
-
 const initialScoreState = {
     player1: '',
     player2: '',
@@ -35,10 +34,8 @@ const initialScoreState = {
     p2_score_coin_points: '',
 };
 
-
-
 export default function NewGameScorepad({ open, onClose, onSave }) {
-    const { register, handleSubmit, watch, setValue, reset } = useForm({ defaultValues: initialScoreState });
+    const { register, handleSubmit, watch, reset } = useForm({ defaultValues: initialScoreState });
     const [players, setPlayers] = useState([]);
     const [loadingPlayers, setLoadingPlayers] = useState(false);
     const [winConditions, setWinConditions] = useState([]);
@@ -67,9 +64,7 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
         reset(initialScoreState);
     }, [open, reset]);
 
-
-
-    // Hilfsfunktion: Summiere alle relevanten Felder für Gesamtpunkte
+    // Calculate total points for a player
     const calcTotal = (prefix) => {
         const keys = [
             'score_blue_cards',
@@ -91,8 +86,7 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
     const p1Total = calcTotal('p1');
     const p2Total = calcTotal('p2');
 
-
-    // Write-Funktion: Speichert das Spiel in die Datenbank
+    // Save game to database
     const onSubmit = async (data) => {
         setSaving(true);
         setError(null);
@@ -137,6 +131,8 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
         }
     };
 
+    if (!open) return null;
+
     return (
         <div style={{
             position: 'fixed',
@@ -161,17 +157,30 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
                 maxHeight: '98vh',
                 overflowY: 'auto',
                 animation: 'fadeInUp 0.3s',
+                position: 'relative',
             }}>
-                <form onSubmit={handleSubmit(onSubmit)} style={{ padding: 20 }} autoComplete="off">
-                    <h3 style={{ textAlign: 'center', marginBottom: 20, fontSize: 22 }}>Neues Spiel eintragen</h3>
+                {/* Sticky Header */}
+                <div style={{
+                    position: 'sticky',
+                    top: 0,
+                    background: '#fff',
+                    zIndex: 2,
+                    padding: '18px 0 10px 0',
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    textAlign: 'center',
+                }}>
+                    <h3 style={{ margin: 0, fontSize: 22 }}>Neues Spiel eintragen</h3>
+                </div>
+                <form onSubmit={handleSubmit(onSubmit)} style={{ padding: '10px 16px 80px 16px' }} autoComplete="off">
                     {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
                     {saving && <div style={{ color: '#0074D9', marginBottom: 8 }}>Speichere...</div>}
-
                     {/* Spieler Auswahl */}
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: 14, marginBottom: 22, flexWrap: 'wrap' }}>
                         <div style={{ flex: 1, minWidth: 120 }}>
-                            <label style={{ fontWeight: 'bold', fontSize: 16 }}>Spieler 1</label>
-                            <select {...register('player1', { required: true })} style={{ width: '100%', fontSize: 18, padding: 8, marginTop: 4, borderRadius: 6 }} disabled={loadingPlayers}>
+                            <label style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 4, display: 'block' }}>Spieler 1</label>
+                            <select {...register('player1', { required: true })} style={{ width: '100%', fontSize: 19, padding: 12, marginTop: 0, borderRadius: 8 }} disabled={loadingPlayers}>
                                 <option value="">{loadingPlayers ? 'Lade...' : 'Bitte wählen'}</option>
                                 {players.map(p => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
@@ -179,8 +188,8 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
                             </select>
                         </div>
                         <div style={{ flex: 1, minWidth: 120 }}>
-                            <label style={{ fontWeight: 'bold', fontSize: 16 }}>Spieler 2</label>
-                            <select {...register('player2', { required: true })} style={{ width: '100%', fontSize: 18, padding: 8, marginTop: 4, borderRadius: 6 }} disabled={loadingPlayers}>
+                            <label style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 4, display: 'block' }}>Spieler 2</label>
+                            <select {...register('player2', { required: true })} style={{ width: '100%', fontSize: 19, padding: 12, marginTop: 0, borderRadius: 8 }} disabled={loadingPlayers}>
                                 <option value="">{loadingPlayers ? 'Lade...' : 'Bitte wählen'}</option>
                                 {players.map(p => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
@@ -188,9 +197,8 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
                             </select>
                         </div>
                     </div>
-
                     {/* Punktefelder als gestapelte Blöcke */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 24 }}>
                         {[
                             { label: 'Blaue Karten', p1: 'p1_score_blue_cards', p2: 'p2_score_blue_cards' },
                             { label: 'Grüne Karten', p1: 'p1_score_green_cards', p2: 'p2_score_green_cards' },
@@ -203,29 +211,57 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
                             { label: 'Militär', p1: 'p1_score_military_points', p2: 'p2_score_military_points' },
                             { label: 'Forschung', p1: 'p1_score_progress_points', p2: 'p2_score_progress_points' },
                             { label: 'Münzen', p1: 'p1_score_coin_points', p2: 'p2_score_coin_points' },
-                        ].map(row => (
-                            <div key={row.label} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 2 }}>{row.label}</div>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <input type="number" inputMode="numeric" min="0" {...register(row.p1)} aria-label={row.label + ' Spieler 1'} style={{ flex: 1, fontSize: 18, padding: 10, borderRadius: 6, border: '1px solid #ccc', background: '#f8f8f8', width: '100%' }} />
-                                    <input type="number" inputMode="numeric" min="0" {...register(row.p2)} aria-label={row.label + ' Spieler 2'} style={{ flex: 1, fontSize: 18, padding: 10, borderRadius: 6, border: '1px solid #ccc', background: '#f8f8f8', width: '100%' }} />
+                        ].map((row, idx) => (
+                            <div key={row.label} style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 2 }}>{row.label}</div>
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <input
+                                        type="number"
+                                        inputMode="numeric"
+                                        min="0"
+                                        {...register(row.p1)}
+                                        aria-label={row.label + ' Spieler 1'}
+                                        style={{ flex: 1, fontSize: 20, padding: 14, borderRadius: 8, border: '1.5px solid #bbb', background: '#f8f8f8', width: '100%' }}
+                                        tabIndex={2 * idx + 1}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const next = document.querySelector(`[tabindex='${2 * idx + 2}']`);
+                                                if (next) next.focus();
+                                            }
+                                        }}
+                                    />
+                                    <input
+                                        type="number"
+                                        inputMode="numeric"
+                                        min="0"
+                                        {...register(row.p2)}
+                                        aria-label={row.label + ' Spieler 2'}
+                                        style={{ flex: 1, fontSize: 20, padding: 14, borderRadius: 8, border: '1.5px solid #bbb', background: '#f8f8f8', width: '100%' }}
+                                        tabIndex={2 * idx + 2}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const next = document.querySelector(`[tabindex='${2 * idx + 3}']`);
+                                                if (next) next.focus();
+                                            }
+                                        }}
+                                    />
                                 </div>
                             </div>
                         ))}
                     </div>
-
                     {/* Gesamtpunkte */}
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20 }}>
-                        <div style={{ flex: 2, fontWeight: 'bold', fontSize: 16 }}>Gesamtpunkte</div>
-                        <input type="number" value={p1Total} readOnly style={{ flex: 1, fontSize: 18, background: '#f4f4f4', border: 'none', textAlign: 'center' }} tabIndex={-1} />
-                        <input type="number" value={p2Total} readOnly style={{ flex: 1, fontSize: 18, background: '#f4f4f4', border: 'none', textAlign: 'center' }} tabIndex={-1} />
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 26 }}>
+                        <div style={{ flex: 2, fontWeight: 'bold', fontSize: 17 }}>Gesamtpunkte</div>
+                        <input type="number" value={p1Total} readOnly style={{ flex: 1, fontSize: 19, background: '#f4f4f4', border: 'none', textAlign: 'center' }} tabIndex={-1} />
+                        <input type="number" value={p2Total} readOnly style={{ flex: 1, fontSize: 19, background: '#f4f4f4', border: 'none', textAlign: 'center' }} tabIndex={-1} />
                     </div>
-
                     {/* Sieger und Siegbedingung */}
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: 14, marginBottom: 32, flexWrap: 'wrap' }}>
                         <div style={{ flex: 1, minWidth: 120 }}>
-                            <label style={{ fontWeight: 'bold', fontSize: 16 }}>Sieger</label>
-                            <select {...register('winner', { required: true })} style={{ width: '100%', fontSize: 18, padding: 8, marginTop: 4, borderRadius: 6 }} disabled={!watch('player1') || !watch('player2')}>
+                            <label style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 4, display: 'block' }}>Sieger</label>
+                            <select {...register('winner', { required: true })} style={{ width: '100%', fontSize: 19, padding: 12, marginTop: 0, borderRadius: 8 }} disabled={!watch('player1') || !watch('player2')}>
                                 <option value="">Bitte wählen</option>
                                 {[watch('player1'), watch('player2')].filter(Boolean).map(pid => {
                                     const p = players.find(pl => pl.id === pid);
@@ -234,8 +270,8 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
                             </select>
                         </div>
                         <div style={{ flex: 1, minWidth: 120 }}>
-                            <label style={{ fontWeight: 'bold', fontSize: 16 }}>Siegbedingung</label>
-                            <select {...register('win_condition', { required: true })} style={{ width: '100%', fontSize: 18, padding: 8, marginTop: 4, borderRadius: 6 }} disabled={loadingWinConditions}>
+                            <label style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 4, display: 'block' }}>Siegbedingung</label>
+                            <select {...register('win_condition', { required: true })} style={{ width: '100%', fontSize: 19, padding: 12, marginTop: 0, borderRadius: 8 }} disabled={loadingWinConditions}>
                                 <option value="">{loadingWinConditions ? 'Lade...' : 'Bitte wählen'}</option>
                                 {winConditions.map(wc => (
                                     <option key={wc.id} value={wc.id}>{wc.name}</option>
@@ -243,25 +279,35 @@ export default function NewGameScorepad({ open, onClose, onSave }) {
                             </select>
                         </div>
                     </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 12, marginBottom: 8 }}>
-                        <button type="submit" style={{ background: '#2ECC40', color: 'white', border: 'none', borderRadius: 8, padding: '14px 32px', fontSize: '1.15rem', fontWeight: 700, cursor: 'pointer' }}>Speichern</button>
-                        <button type="button" style={{ background: '#AAAAAA', color: 'white', border: 'none', borderRadius: 8, padding: '14px 32px', fontSize: '1.15rem', fontWeight: 700, cursor: 'pointer' }} onClick={onClose}>Abbrechen</button>
+                    {/* Sticky Footer */}
+                    <div style={{
+                        position: 'sticky',
+                        bottom: 0,
+                        background: '#fff',
+                        zIndex: 2,
+                        padding: '16px 0 18px 0',
+                        boxShadow: '0 -2px 8px rgba(0,0,0,0.04)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: 18,
+                    }}>
+                        <button type="submit" style={{ background: '#2ECC40', color: 'white', border: 'none', borderRadius: 10, padding: '16px 36px', fontSize: '1.18rem', fontWeight: 700, cursor: 'pointer', minWidth: 120 }}>Speichern</button>
+                        <button type="button" style={{ background: '#AAAAAA', color: 'white', border: 'none', borderRadius: 10, padding: '16px 36px', fontSize: '1.18rem', fontWeight: 700, cursor: 'pointer', minWidth: 120 }} onClick={onClose}>Abbrechen</button>
                     </div>
                 </form>
+                <style>{`
+                    @keyframes fadeInUp {
+                        from { opacity: 0; transform: translateY(40px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    @media (max-width: 600px) {
+                        .scorepad-modal { max-width: 99vw !important; padding: 4px !important; }
+                        form { padding: 4px !important; }
+                        input, select { font-size: 19px !important; padding: 16px 8px !important; }
+                        .score-row { flex-direction: column !important; gap: 4px !important; }
+                    }
+                `}</style>
             </div>
-            <style>{`
-                @keyframes fadeInUp {
-                    from { opacity: 0; transform: translateY(40px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @media (max-width: 600px) {
-                    .scorepad-modal { max-width: 99vw !important; padding: 8px !important; }
-                    form { padding: 8px !important; }
-                    input, select { font-size: 18px !important; padding: 12px 8px !important; }
-                    .score-row { flex-direction: column !important; gap: 4px !important; }
-                }
-            `}</style>
         </div>
     );
 }
