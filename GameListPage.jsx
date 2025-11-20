@@ -1,11 +1,26 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
+import NewGameScorepad from './NewGameScorepad';
 export default function GameListPage() {
   const [games, setGames] = useState([]);
   const [players, setPlayers] = useState({});
   const [winConditions, setWinConditions] = useState({});
   const [loading, setLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editGame, setEditGame] = useState(null);
+
+  // Handler to open edit modal with selected game
+  function handleEditGame(game) {
+    setEditGame(game);
+    setEditModalOpen(true);
+  }
+
+  // Handler to close modal
+  function handleCloseModal() {
+    setEditModalOpen(false);
+    setEditGame(null);
+  }
 
   // Lade Spieler und Siegbedingungen als Map für schnelle Anzeige
   useEffect(() => {
@@ -47,6 +62,7 @@ export default function GameListPage() {
               <th>Spieler 2</th>
               <th>Sieger</th>
               <th>Siegbedingung</th>
+              <th>Bearbeiten</th>
             </tr>
           </thead>
           <tbody>
@@ -57,10 +73,29 @@ export default function GameListPage() {
                 <td>{players[game.player_2_id] || '-'}</td>
                 <td>{players[game.winner_id] || '-'}</td>
                 <td>{winConditions[game.win_condition_id] || '-'}</td>
+                <td>
+                  <button
+                    style={{ background: '#FFDC00', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 600, cursor: 'pointer' }}
+                    onClick={() => handleEditGame(game)}
+                  >
+                    Edit
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* Edit Modal */}
+      {editModalOpen && (
+        <NewGameScorepad
+          open={editModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleCloseModal}
+          game={editGame}
+          mode="edit"
+        />
       )}
     </div>
   );
